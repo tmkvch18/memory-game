@@ -2,6 +2,8 @@ import "../styles/style.scss";
 
 document.addEventListener("DOMContentLoaded", () => {
   const TOTAL_PARTS = 8;
+  const MAX_RESULTS = 10;
+  const RESULTS_STORAGE_KEY = "memory-game-results";
 
   const body = document.body;
   const cardInfo = [
@@ -85,8 +87,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const closeModal = () => {
     body.classList.remove("no-scroll");
-    modalElement?.classList.remove("modal--open");
+    modalElement?.classList.remove("modal--open", "modal--results");
     modalContentElement?.replaceChildren();
+  };
+
+  const openModal = (content, modifier) => {
+    modalContentElement?.replaceChildren(content);
+
+    if (modifier) modalElement?.classList.add(modifier);
+
+    modalElement?.classList.add("modal--open");
+    body.classList.add("no-scroll");
   };
 
   const createCards = () => {
@@ -132,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const createModal = () => {
-    const modal = createElem("div", "modal modal--open");
+    const modal = createElem("div", "modal");
     const modalInnerWrapper = createElem("div", "modal__inner-wrapper");
     const modalContent = createElem("div", "modal__content");
     const modalBtns = createElem("div", "modal__btns");
@@ -143,7 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.addEventListener("click", (event) => {
       const target = event.target;
       const btnClose = target.closest(".modal__close");
+      const btnNewGame = target.closest(".modal__new-game");
       const overlay = target.classList.contains("modal--open");
+
+      if (btnNewGame) {
+        startNewGame();
+        return;
+      }
 
       if (btnClose || overlay) {
         closeModal();
@@ -171,11 +188,121 @@ document.addEventListener("DOMContentLoaded", () => {
   let foundElement = null;
   let movesTotal = 0;
   let foundTotal = 0;
+  let hideCardsTimer = null;
+
+  const updateMoves = () => {
+    movesElement.textContent = movesTotal;
+    movesElement.dataset.movesSum = movesTotal;
+  };
+
+  const updateFound = () => {
+    foundElement.textContent = foundTotal;
+    foundElement.dataset.foundSum = foundTotal;
+  };
 
   const movesUp = () => {
     movesTotal += 1;
-    movesElement.textContent = movesTotal;
-    movesElement.dataset.foundSum = movesTotal;
+    updateMoves();
+  };
+
+  const getResults = () => {
+    try {
+      const results = JSON.parse(localStorage.getItem(RESULTS_STORAGE_KEY));
+
+      return Array.isArray(results) ? results : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveResult = (moves) => {
+    const results = [...getResults(), { moves, date: Date.now() }]
+      .sort((a, b) => a.moves - b.moves || a.date - b.date)
+      .slice(0, MAX_RESULTS);
+
+    try {
+      localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(results));
+    } catch {
+      console.log("localStorage is unavailable");
+    }
+  };
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+
+    return `${day}.${month}.${date.getFullYear()}`;
+  };
+
+  const createResultsTable = (results) => {
+    const table = createElem("table", "modal__results-table");
+    const thead = createElem("thead");
+    const tbody = createElem("tbody");
+    const headRow = createElem("tr");
+
+    ["Place", "Moves", "Date"].forEach((title) => {
+      const th = createElem("th");
+      th.textContent = title;
+      appendTo(headRow, th);
+    });
+
+    results.forEach((result, index) => {
+      const row = createElem("tr");
+
+      [index + 1, result.moves, formatDate(result.date)].forEach((value) => {
+        const td = createElem("td");
+        td.textContent = value;
+        appendTo(row, td);
+      });
+
+      appendTo(tbody, row);
+    });
+
+    appendTo(thead, headRow);
+    appendTo(table, thead);
+    appendTo(table, tbody);
+
+    return table;
+  };
+
+  const showResults = () => {
+    const results = getResults();
+    const resultsContainer = createElem("div", "modal__results");
+
+    const resultsTitle = createElem("div", "modal__results-title");
+    resultsTitle.textContent = "Results";
+    appendTo(resultsContainer, resultsTitle);
+
+    if (results.length) {
+      appendTo(resultsContainer, createResultsTable(results));
+    } else {
+      const emptyText = createElem("div", "modal__results-empty");
+      emptyText.textContent = "No results yet!";
+      appendTo(resultsContainer, emptyText);
+    }
+
+    openModal(resultsContainer, "modal--results");
+  };
+
+  const startNewGame = () => {
+    clearTimeout(hideCardsTimer);
+    hideCardsTimer = null;
+
+    firstClick = true;
+    firstCard = null;
+    secondCard = null;
+
+    movesTotal = 0;
+    foundTotal = 0;
+    updateMoves();
+    updateFound();
+
+    const newCards = createCards();
+    cardsElement.replaceWith(newCards);
+    cardsElement = newCards;
+
+    closeModal();
   };
 
   const clickCard = (card) => {
@@ -193,12 +320,13 @@ document.addEventListener("DOMContentLoaded", () => {
     currentCard.classList.add("cards__card--show");
 
     if (firstCard?.id !== secondCard?.id && secondCard !== null) {
-      setTimeout(() => {
+      hideCardsTimer = setTimeout(() => {
         firstCard.classList.remove("cards__card--show");
         secondCard.classList.remove("cards__card--show");
         cardsElement.classList.remove("cards--disabled");
         firstCard = null;
         secondCard = null;
+        hideCardsTimer = null;
       }, 1500);
 
       movesUp();
@@ -209,23 +337,25 @@ document.addEventListener("DOMContentLoaded", () => {
       firstCard = null;
       secondCard = null;
       foundTotal += 1;
-      foundElement.textContent = foundTotal;
-      foundElement.dataset.foundSum = foundTotal;
+      updateFound();
 
       movesUp();
 
       if (foundTotal === TOTAL_PARTS) {
+        saveResult(movesTotal);
+
         const winContainer = createElem("div", "modal__win");
 
-        const winText = createElem("span", "modal__win-text");
+        const winText = createElem("div", "modal__win-text");
         winText.textContent = "You Won!";
 
-        const winMoves = createElem("span", "modal__win-moves");
+        const winMoves = createElem("div", "modal__win-moves");
         winMoves.textContent = `Moves: ${movesTotal}`;
 
-        appendTo(modalContentElement, winContainer);
+        appendTo(winContainer, winText);
+        appendTo(winContainer, winMoves);
 
-        modalElement?.classList.add("modal--open");
+        openModal(winContainer);
       }
     }
   };
@@ -249,11 +379,13 @@ document.addEventListener("DOMContentLoaded", () => {
     newGameBtn.type = "button";
     newGameBtn.dataset.newGameBtn = "new-game-btn";
     newGameBtn.textContent = "New Game";
+    newGameBtn.addEventListener("click", startNewGame);
 
     const resultBtn = createElem("button", "btn header__btn");
     resultBtn.type = "button";
     resultBtn.dataset.resultBtn = "result-btn";
     resultBtn.textContent = "Results";
+    resultBtn.addEventListener("click", showResults);
 
     const field = createElem("div", "field");
     const moves = createElem("div", "moves");
