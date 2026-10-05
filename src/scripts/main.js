@@ -79,19 +79,49 @@ document.addEventListener("DOMContentLoaded", () => {
         cardIndex = 0;
       }
 
-      const card = createElem("div", "card");
-      card.id = `${cardInfo[cardIndex].name}`;
-      const cardImg = createElem("img", "card__img");
-      cardImg.src = `./svg/${cardInfo[cardIndex].svg}.svg`;
+      const cardName = cardInfo[cardIndex].name;
+      const cardSvg = cardInfo[cardIndex].svg;
 
-      appendTo(card, cardImg);
+      const card = createElem("div", "cards__card cards__card--hidden");
+      card.id = `${cardName}`;
+
+      const cardInner = createElem("div", "cards__card-inner");
+
+      appendTo(card, cardInner);
+
+      const cardBack = createElem("div", "cards__card-back");
+      const cardBackImg = createElem("img", "cards__card-img");
+      cardBackImg.src = `./svg/${cardSvg}.svg`;
+      cardBackImg.alt = cardName;
+
+      appendTo(cardBack, cardBackImg);
+      appendTo(cardInner, cardBack);
+
+      const cardFront = createElem("div", "cards__card-front");
+      const cardFrontImg = createElem("img", "cards__card-img");
+      cardFrontImg.src = "./svg/pl.svg";
+      cardFrontImg.alt = "Premier League";
+
+      appendTo(cardFront, cardFrontImg);
+      appendTo(cardInner, cardFront);
+
       appendTo(cards, card);
 
       cardIndex++;
     }
 
-    moves.textContent = "Moves: 0";
-    found.textContent = "Found: 0";
+    moves.textContent = "Moves: ";
+    found.textContent = "Found: ";
+
+    const movesSum = createElem("span", "");
+    movesSum.dataset.movesSum = 0;
+    movesSum.textContent = 0;
+    appendTo(moves, movesSum);
+
+    const foundSum = createElem("span", "");
+    foundSum.dataset.foundSum = 0;
+    foundSum.textContent = 0;
+    appendTo(found, foundSum);
 
     appendTo(scoreboard, moves);
     appendTo(scoreboard, found);

@@ -1,1 +1,11 @@
-.field {}
+.field {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  row-gap: 10px;
+  margin-block: 10px;
+  background-color: var(--main-bg);
+  border-radius: var(--border-radius);
+  padding: 20px;
+}
