@@ -1,6 +1,13 @@
 :root {
+  --main-color: #ff1d1d;
+  --header-bg: #000000;
+  --btn-text-color: #ffffff;
   --main-font: "Roboto", sans-serif;
   --container-width: 1440px;
   --container-padding-y: 32px;
   --container-padding-x: 16px;
+  --border-radius: 10px;
+  --btn-padding: 7px;
+  --btn-border-radius: 3px;
+  --transition-duration: 0.25s;
 }
