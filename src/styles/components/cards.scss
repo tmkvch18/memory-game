@@ -11,6 +11,12 @@
     border-radius: var(--border-radius);
     perspective: 1000px;
 
+    @media (hover: hover) {
+      &:hover > .cards__card-inner {
+        transform: rotateY(180deg);
+      }
+    }
+
     &-inner {
       width: 100%;
       height: 100%;

@@ -1,8 +1,6 @@
 import "../styles/style.scss";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const TOTAL_CARDS = 16;
-
   const body = document.body;
   const cardInfo = [
     {
@@ -39,6 +37,21 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   ];
 
+  const shuffleCards = (array) => {
+    let currentIndex = array.length;
+    let temporary;
+    let randomIndex;
+
+    while (currentIndex) {
+      randomIndex = Math.floor(Math.shuffle() * currentIndex--);
+      temporary = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporary;
+    }
+
+    return array;
+  };
+
   const appendTo = (place, element) => {
     place.append(element);
   };
@@ -65,22 +78,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return element;
   };
 
-  const createField = () => {
-    const field = createElem("div", "field");
-    const moves = createElem("div", "moves");
-    const found = createElem("div", "found");
+  const createCards = () => {
+    const shuffledCardsArr = shuffleCards([...cardInfo, ...cardInfo]);
+
     const cards = createElem("div", "cards");
-    const scoreboard = createElem("div", "scoreboard");
 
     let cardIndex = 0;
 
-    for (let i = 0; i < TOTAL_CARDS; i++) {
+    for (let i = 0; i < shuffledCardsArr.length; i++) {
       if (cardIndex === 8) {
         cardIndex = 0;
       }
 
-      const cardName = cardInfo[cardIndex].name;
-      const cardSvg = cardInfo[cardIndex].svg;
+      const cardName = shuffledCardsArr[cardIndex].name;
+      const cardSvg = shuffledCardsArr[cardIndex].svg;
 
       const card = createElem("div", "cards__card cards__card--hidden");
       card.id = `${cardName}`;
@@ -110,25 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cardIndex++;
     }
 
-    moves.textContent = "Moves: ";
-    found.textContent = "Found: ";
-
-    const movesSum = createElem("span", "");
-    movesSum.dataset.movesSum = 0;
-    movesSum.textContent = 0;
-    appendTo(moves, movesSum);
-
-    const foundSum = createElem("span", "");
-    foundSum.dataset.foundSum = 0;
-    foundSum.textContent = 0;
-    appendTo(found, foundSum);
-
-    appendTo(scoreboard, moves);
-    appendTo(scoreboard, found);
-    appendTo(field, scoreboard);
-    appendTo(field, cards);
-
-    return field;
+    return cards;
   };
 
   const renderLayout = () => {
@@ -145,7 +138,30 @@ document.addEventListener("DOMContentLoaded", () => {
     resultBtn.dataset.resultBtn = "result-btn";
     resultBtn.textContent = "Results";
 
-    const field = createField();
+    const field = createElem("div", "field");
+    const moves = createElem("div", "moves");
+    const found = createElem("div", "found");
+    const scoreboard = createElem("div", "scoreboard");
+
+    moves.textContent = "Moves: ";
+    found.textContent = "Found: ";
+
+    const movesSum = createElem("span", "");
+    movesSum.dataset.movesSum = 0;
+    movesSum.textContent = 0;
+    appendTo(moves, movesSum);
+
+    const foundSum = createElem("span", "");
+    foundSum.dataset.foundSum = 0;
+    foundSum.textContent = 0;
+
+    appendTo(found, foundSum);
+    appendTo(scoreboard, moves);
+    appendTo(scoreboard, found);
+    appendTo(field, scoreboard);
+
+    const cards = createCards();
+    appendTo(field, cards);
 
     appendTo(header, newGameBtn);
     appendTo(header, resultBtn);
