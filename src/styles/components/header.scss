@@ -1,0 +1,10 @@
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  column-gap: 10px;
+  background-color: var(--main-bg);
+  border-radius: var(--border-radius);
+  padding: 10px;
+  margin-top: 10px;
+}

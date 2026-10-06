@@ -1,0 +1,10 @@
+@use "./base/variables";
+@use "./base/normalize";
+@use "./base/utils";
+
+@use "./components/btn";
+@use "./components/header";
+@use "./components/field";
+@use "./components/scoreboard";
+@use "./components/cards";
+@use "./components/modal";
